@@ -19,7 +19,20 @@ def lagrange_points(cell, degree):
 
     """
 
-    raise NotImplementedError
+    if cell.dim == 1: #1-dimensional cell
+
+        lagrange_p = np.array([i / degree for i in range(degree + 1)])
+        lagrange_p = lagrange_p.reshape([degree+1, 1])
+
+    elif cell.dim == 2: #2-dimensional cell
+        
+        lagrange_p = np.empty(shape=[0, 2])
+        for i in range(degree + 1):
+            for j in range(degree-i+1):
+                coord = np.array([i / degree, j / degree])
+                lagrange_p = np.vstack([lagrange_p, coord])
+
+    return lagrange_p
 
 
 def vandermonde_matrix(cell, degree, points, grad=False):
