@@ -152,7 +152,8 @@ class FiniteElement(object):
 
         """
 
-        raise NotImplementedError
+        result = np.dot(vandermonde_matrix(self.cell, self.degree, points, grad), self.basis_coefs)
+        return result
 
     def interpolate(self, fn):
         """Interpolate fn onto this finite element by evaluating it
@@ -188,12 +189,12 @@ class LagrangeElement(FiniteElement):
             spans the complete polynomial space.
 
         The implementation of this class is left as an :ref:`exercise
-        <ex-lagrange-element>`.
         """
 
-        raise NotImplementedError
         # Use lagrange_points to obtain the set of nodes.  Once you
         # have obtained nodes, the following line will call the
         # __init__ method on the FiniteElement class to set up the
         # basis coefficients.
+        
+        nodes = lagrange_points(cell, degree)
         super(LagrangeElement, self).__init__(cell, degree, nodes)
