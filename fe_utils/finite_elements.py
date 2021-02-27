@@ -25,7 +25,7 @@ def lagrange_points(cell, degree):
         lagrange_p = lagrange_p.reshape([degree+1, 1])
 
     elif cell.dim == 2: #2-dimensional cell
-        
+
         lagrange_p = [ [i / degree, j / degree] for i in range(degree + 1) for j in range(degree - i+ 1)]
 
         # convert to numpy array
@@ -49,37 +49,25 @@ def vandermonde_matrix(cell, degree, points, grad=False):
     <ex-vandermonde>`.
     """
 
-    #1-dimensional cell
+    # 1-dimensional cell
     if cell.dim == 1: 
-        #Initialization
+
+        # reshape the points
         points = points.reshape(-1,)
-        m, = np.shape(points)
-        van = np.empty(shape=[m, 0])
 
-        for i in range(degree+1):
-            #construct whole column
-            col = np.array([x**i for x in points])
-            col = col.reshape(-1,1)
-            #stack the column
-            van = np.hstack([van, col])
-                
-        return van
+        # construct Vandermonde matrix
+        van = [[x**i  for i in range(degree + 1)] for x in points]
+
+        # convert to numpy array
+        return np.array(van)
           
-    #2-dimensional cell
+    # 2-dimensional cell
     elif cell.dim == 2: 
-        #Initialization
-        m = np.shape(points)[0]
-        van = np.empty(shape=[m, 0])
+        # construct matrix
+        van = [[coord[0]**(i-j) * coord[1]**j for i in range(degree+1) for j in range(i+1) ] for coord in points]
 
-        for i in range(degree+1):
-            for j in range(i+1):
-                #construct whole column
-                col = np.array([coord[0]**(i-j) * coord[1]**j for coord in points])
-                col = col.reshape(-1,1)
-                #stack the column
-                van = np.hstack([van, col])
-                
-        return van
+        # convert to numpy array
+        return np.array(van)
 
 
     
