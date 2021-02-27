@@ -190,8 +190,12 @@ class FiniteElement(object):
         <ex-interpolate>`.
 
         """
+        
+        # evaluate fn at each nodes
+        result = [fn(x) for x in self.nodes]
 
-        raise NotImplementedError
+        # convert to numpy array
+        return np.array(result)
 
     def __repr__(self):
         return "%s(%s, %s)" % (self.__class__.__name__,
