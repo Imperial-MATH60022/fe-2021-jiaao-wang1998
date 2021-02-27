@@ -48,26 +48,57 @@ def vandermonde_matrix(cell, degree, points, grad=False):
     The implementation of this function is left as an :ref:`exercise
     <ex-vandermonde>`.
     """
+    
+    # evaluate Vandermonde matrix 
+    if grad == False:
 
-    # 1-dimensional cell
-    if cell.dim == 1: 
+        # 1-dimensional cell
+        if cell.dim == 1: 
 
-        # reshape the points
-        points = points.reshape(-1,)
+            # reshape the points
+            points = points.reshape(-1,)
 
-        # construct Vandermonde matrix
-        van = [[x**i  for i in range(degree + 1)] for x in points]
+            # construct Vandermonde matrix
+            van = [[x**i  for i in range(degree + 1)] for x in points]
 
-        # convert to numpy array
-        return np.array(van)
-          
-    # 2-dimensional cell
-    elif cell.dim == 2: 
-        # construct matrix
-        van = [[coord[0]**(i-j) * coord[1]**j for i in range(degree+1) for j in range(i+1) ] for coord in points]
+            # convert to numpy array
+            return np.array(van)
+            
+        # 2-dimensional cell
+        elif cell.dim == 2: 
+            # construct matrix
+            van = [[coord[0]**(i-j) * coord[1]**j for i in range(degree+1) for j in range(i+1) ] for coord in points]
 
-        # convert to numpy array
-        return np.array(van)
+            # convert to numpy array
+            return np.array(van)
+    
+    # evaluate gradient of Vandermonde matrix
+    else:
+
+        # 1-dimensional cell
+        if cell.dim == 1: 
+
+            # reshape the points
+            points = points.reshape(-1,)
+
+            # construct gradient
+            gradient = [[[i * (x**(i-1))] if i !=0 else [0] for i in range(degree + 1)] for x in points]
+
+            # convert to numpy array
+            return np.array(gradient)
+
+        # 2-dimensional cell
+        elif cell.dim == 2: 
+
+            # construct gradient
+            gradient = [[[(i-j) * coord[0]**(i-j-1) * coord[1]**j, j * coord[0]**(i-j) * coord[1]**(j-1)] for i in range(degree+1) for j in range(i+1) ] for coord in points]
+        
+            # convert nan to 0
+            gradient  = np.nan_to_num( np.array(gradient))
+        
+            # return gradient
+            return gradient
+
 
 
     
