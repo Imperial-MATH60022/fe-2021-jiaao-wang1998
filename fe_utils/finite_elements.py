@@ -82,7 +82,7 @@ def vandermonde_matrix(cell, degree, points, grad=False):
             points = points.reshape(-1,)
 
             # construct gradient
-            gradient = [[[i * (x**(i-1))] if i !=0 else [0] for i in range(degree + 1)] for x in points]
+            gradient = [[[(i) * (x**(max(i-1,0)))] for i in range(degree + 1)] for x in points]
 
             # convert to numpy array
             return np.array(gradient)
@@ -91,17 +91,13 @@ def vandermonde_matrix(cell, degree, points, grad=False):
         elif cell.dim == 2: 
 
             # construct gradient
-            gradient = [[[(i-j) * coord[0]**(i-j-1) * coord[1]**j, j * coord[0]**(i-j) * coord[1]**(j-1)] for i in range(degree+1) for j in range(i+1) ] for coord in points]
+            gradient = [[[(i-j) * coord[0]**max(0, i-j-1) * coord[1]**j, j * coord[0]**(i-j) * coord[1]**max(0, j-1)] for i in range(degree+1) for j in range(i+1) ] for coord in points]
         
             # convert nan to 0
             gradient  = np.nan_to_num( np.array(gradient))
         
             # return gradient
             return gradient
-
-
-
-    
 
 
 class FiniteElement(object):
@@ -169,9 +165,16 @@ class FiniteElement(object):
         <ex-tabulate>`.
 
         """
+        # return tabulation of the basis
+        if grad == False:
 
-        result = np.dot(vandermonde_matrix(self.cell, self.degree, points, grad), self.basis_coefs)
-        return result
+            result = np.dot(vandermonde_matrix(self.cell, self.degree, points, grad), self.basis_coefs)
+            return result
+
+        # return tabulation of the gradient of the basis
+        else: 
+            result = np.einsum("ijk,jl->ilk", vandermonde_matrix(self.cell, self.degree, points, grad), self.basis_coefs) 
+            return result
 
     def interpolate(self, fn):
         """Interpolate fn onto this finite element by evaluating it
