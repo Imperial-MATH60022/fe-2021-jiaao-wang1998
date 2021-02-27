@@ -25,12 +25,11 @@ def lagrange_points(cell, degree):
         lagrange_p = lagrange_p.reshape([degree+1, 1])
 
     elif cell.dim == 2: #2-dimensional cell
+        
+        lagrange_p = [ [i / degree, j / degree] for i in range(degree + 1) for j in range(degree - i+ 1)]
 
-        lagrange_p = np.empty(shape=[0, 2])
-        for i in range(degree + 1):
-            for j in range(degree-i+1):
-                coord = np.array([i / degree, j / degree])
-                lagrange_p = np.vstack([lagrange_p, coord])
+        # convert to numpy array
+        lagrange_p = np.array(lagrange_p)
 
     return lagrange_p
 
