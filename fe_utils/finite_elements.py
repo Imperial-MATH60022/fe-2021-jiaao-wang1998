@@ -26,7 +26,8 @@ def lagrange_points(cell, degree):
 
     elif cell.dim == 2: #2-dimensional cell
 
-        lagrange_p = [ [i / degree, j / degree] for i in range(degree + 1) for j in range(degree - i+ 1)]
+        # produces the nodes in entity order
+        lagrange_p = [ [j / degree, i / degree] for i in range(degree + 1) for j in range(degree - i+ 1)]
 
         # convert to numpy array
         lagrange_p = np.array(lagrange_p)
@@ -190,7 +191,7 @@ class FiniteElement(object):
         <ex-interpolate>`.
 
         """
-        
+
         # evaluate fn at each nodes
         result = [fn(x) for x in self.nodes]
 
@@ -222,4 +223,49 @@ class LagrangeElement(FiniteElement):
         # basis coefficients.
         
         nodes = lagrange_points(cell, degree)
-        super(LagrangeElement, self).__init__(cell, degree, nodes)
+
+        # initialize entity nodes
+        #entity_nodes = {d: {0: np.zeros(np.math.comb(degree-1, d))} for d in range(cell.dim+1)}
+        entity_nodes = {}
+        
+        # 1 dimesnion entity nodes
+        if cell.dim == 1:
+            # 2 points
+            entity_nodes[0] = {0: [0], 1: [nodes.shape[0]-1]}
+
+            # 1 edge
+            entity_nodes[1] = {0: [n+1 for n in range(nodes.shape[0]-2)] }
+
+        # 2 dimension entity nodes    
+        elif cell.dim == 2:
+
+            # 3 points 
+            entity_nodes[0] = {0: [0], 1: [degree], 2: [nodes.shape[0]-1]}
+
+            # 3 edges
+            entity_nodes[1] = {i: [] for i in range(3)}
+            
+            # 1 faces
+            entity_nodes[2] = {0: []}
+            
+            # loop over all points
+            for n in range(nodes.shape[0]):
+                # check if it is a vertex
+                if n != 0 and n != degree and n != nodes.shape[0]-1:
+                    # assume it is on the face
+                    face = True
+
+                    for e in range(3):
+                        if cell.point_in_entity(nodes[n], (1, e)):
+                            # not on the face
+                            face = False
+                            # insert to the edge
+                            entity_nodes[1][e] = entity_nodes[1][e] + [n]
+
+                    if face and cell.point_in_entity(nodes[n], (2, 0)):
+                        # insert to the face
+                        entity_nodes[2][0] = entity_nodes[2][0] + [n]
+    
+        # set up basis coefficients
+        super(LagrangeElement, self).__init__(cell, degree, nodes, entity_nodes = entity_nodes)
+
