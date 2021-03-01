@@ -23,15 +23,47 @@ class FunctionSpace(object):
         #: The :class:`~.finite_elements.FiniteElement` of this space.
         self.element = element
 
-        raise NotImplementedError
-
         # Implement global numbering in order to produce the global
         # cell node list for this space.
         #: The global cell node list. This is a two-dimensional array in
         #: which each row lists the global nodes incident to the corresponding
         #: cell. The implementation of this member is left as an
         #: :ref:`exercise <ex-function-space>`
-        self.cell_nodes = None
+
+        # number of cell in the mesh
+        num_cell = mesh.cell_vertices.shape[0]
+
+        # initialize cell_nodes
+        self.cell_nodes = np.array([[0 for delta in range(mesh.dim+1) for epsilon in range(len(element.entity_nodes[delta])) for n in range(element.nodes_per_entity[delta])  ]for c in range(mesh.cell_vertices.shape[0])], dtype = int)
+        #self.cell_nodes = np.array([[G[delta]+mesh.adjacency(mesh.dim, delta)[c][epsilon] + n if delta<mesh.dim else G[delta] + c  for delta in range(mesh.dim+1) for epsilon in range(len(element.entity_nodes[delta])) for n in range(element.nodes_per_entity[delta])  ]for c in range(mesh.cell_vertices.shape[0])], dtype = int)
+        
+        # number of nodes that lie in entities with lower dimension
+        num_lower = np.zeros(mesh.dim + 1)
+        for i in range(mesh.dim):
+            num_lower[i+1] = num_lower[i] + mesh.entity_counts[i]*element.nodes_per_entity[i]
+
+        # for each cell c
+        for c in range(num_cell):
+            # for each dimension delta
+            for delta in range(mesh.dim+1):
+                # for each entity epsilon in dimension delta
+                for epsilon in range(len(element.entity_nodes[delta])):
+                    # for each node in entity epsilon
+                    for n in range(element.nodes_per_entity[delta]):
+        
+                        if delta < mesh.dim:
+                            # Adjacency
+                            i = mesh.adjacency(mesh.dim, delta)[c][epsilon]
+                            # global numbering
+                            self.cell_nodes[c, element.entity_nodes[delta][epsilon][n]] = num_lower[delta]+  i*element.nodes_per_entity[delta] + n
+                        
+                        else:
+                            # the only adjacent cell is the cell itself                     
+                            self.cell_nodes[c, element.entity_nodes[delta][epsilon][n]] = num_lower[delta] + c*element.nodes_per_entity[delta] + n
+                
+
+        
+        #print('cell_nodes: ', self.cell_nodes)
 
         #: The total number of nodes in the function space.
         self.node_count = np.dot(element.nodes_per_entity, mesh.entity_counts)
