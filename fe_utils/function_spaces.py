@@ -4,7 +4,7 @@ from .finite_elements import LagrangeElement, lagrange_points
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.tri import Triangulation
-
+from .quadrature import gauss_quadrature
 
 class FunctionSpace(object):
 
@@ -199,4 +199,31 @@ class Function(object):
 
         :result: The integral (a scalar)."""
 
-        raise NotImplementedError
+        # Store for convenience
+        fs = self.function_space
+        fe = fs.element
+        mesh = fs.mesh
+
+        # Create a quadrature rule
+        Q = gauss_quadrature(fe.cell, 2*fe.degree)
+        
+        # Evaluate the basis functions at each quadrature point.
+        phi = fe.tabulate(Q.points)
+       
+        # Initialize the result
+        result = 0
+
+        # Visit each cell in turn.
+        for c in range(mesh.entity_counts[-1]):
+            # Find the appropriate global node numbers for this cell.
+            nodes = fs.cell_nodes[c, :]
+
+            # Compute the change of coordinates
+            J = mesh.jacobian(c)
+            detJ = np.abs(np.linalg.det(J))
+    
+            # Compute the actual cell quadrature.
+            result += np.dot( np.dot(self.values[nodes], phi.T), Q.weights) * detJ
+
+        return result
+ 
