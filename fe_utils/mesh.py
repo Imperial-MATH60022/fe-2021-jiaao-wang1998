@@ -121,8 +121,9 @@ class Mesh(object):
         """
         
         vertex_coords = self.vertex_coords[self.cg1fs.cell_nodes[c, :], :]
+
         # evaluate the Jacobian at the cell origin X=0
-        result = np.dot(self.coord_map[0, :, :].T, vertex_coords)
+        result = np.dot(self.coord_map[0].T, vertex_coords)
         
         return result
 
