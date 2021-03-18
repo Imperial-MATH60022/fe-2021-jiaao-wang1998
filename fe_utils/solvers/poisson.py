@@ -50,14 +50,10 @@ def assemble(fs, f):
         # Compute the actual cell quadrature for left-hand side
         A[np.ix_(nodes, nodes)] += np.einsum("ba, qib, ca, qjc, q -> ij", np.linalg.inv(J), psi, np.linalg.inv(J), psi, Q.weights) * detJ
                                 
-
     # set global vector rows corresponding to boundary nodes to 0
     l[boundary_nodes(fs)] = 0
-
     # set global matrix rows corresponding to boundary nodes to 0
     A[boundary_nodes(fs), :] = 0
-    
-    
     # set diagonal entry on each matrix row corresponding to a boundary node to 1
     A[boundary_nodes(fs), boundary_nodes(fs)] = 1
 
