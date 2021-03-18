@@ -168,8 +168,7 @@ class FiniteElement(object):
 
         """
         # return tabulation of the basis
-        if grad == False:
-
+        if not grad:
             result = np.dot(vandermonde_matrix(self.cell, self.degree, points, grad), self.basis_coefs)
             return result
 
