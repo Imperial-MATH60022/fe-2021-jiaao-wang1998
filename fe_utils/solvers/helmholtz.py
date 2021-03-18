@@ -41,18 +41,11 @@ def assemble(fs, f):
         detJ = np.abs(np.linalg.det(J))
 
         # Compute the actual cell quadrature for rignt-hand side
-        l[nodes] += np.dot( phi.T * np.dot(f.values[nodes], phi.T), Q.weights) * detJ
+        l[nodes] += np.einsum("qi, k, qk, q -> i", phi, f.values[nodes], phi, Q.weights) * detJ
 
-        '''
-        for i in range(nodes.shape[0]):
-                  lm[nodes[i]] += np.dot( phi[:,i].T * np.dot(f.values[nodes], phi.T), Q.weights) * detJ
-        '''
-        
         # Compute the actual cell quadrature for left-hand side
-
-        for q in range(Q.weights.shape[0]):
-            A[np.ix_(nodes, nodes)] += np.dot( np.dot(np.dot(np.linalg.inv(J.T), psi[0].T).T, np.dot(np.linalg.inv(J.T), psi[0].T)) +  np.dot(phi[q,:].T, phi[q,:]), Q.weights[q]) * detJ 
-        
+        A[np.ix_(nodes, nodes)] += (np.einsum("ba, qib, ca, qjc, q -> ij", np.linalg.inv(J), psi, np.linalg.inv(J), psi, Q.weights) * detJ
+                                + np.einsum("qi, qj, q -> ij", phi, phi, Q.weights) * detJ)
 
     return A, l
 
