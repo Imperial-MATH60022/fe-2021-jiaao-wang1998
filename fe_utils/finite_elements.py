@@ -69,7 +69,8 @@ def vandermonde_matrix(cell, degree, points, grad=False):
         # 2-dimensional cell
         elif cell.dim == 2: 
             # construct matrix
-            van = [[coord[0]**(i-j) * coord[1]**j for i in range(degree+1) for j in range(i+1) ] for coord in points]
+            van = [[coord[0]**(i-j) * coord[1]**j 
+                    for i in range(degree+1) for j in range(i+1) ] for coord in points]
 
             # convert to numpy array
             return np.array(van)
@@ -93,7 +94,10 @@ def vandermonde_matrix(cell, degree, points, grad=False):
         elif cell.dim == 2: 
 
             # construct gradient
-            gradient = [[[(i-j) * coord[0]**max(0, i-j-1) * coord[1]**j, j * coord[0]**(i-j) * coord[1]**max(0, j-1)] for i in range(degree+1) for j in range(i+1) ] for coord in points]
+            gradient = [[[(i-j) * coord[0]**max(0, i-j-1) * coord[1]**j, j 
+                          * coord[0]**(i-j) * coord[1]**max(0, j-1)] 
+                          for i in range(degree+1) for j in range(i+1) ] 
+                          for coord in points]
         
             # convert nan to 0
             gradient  = np.nan_to_num( np.array(gradient))
