@@ -273,3 +273,71 @@ class LagrangeElement(FiniteElement):
         # set up basis coefficients
         super(LagrangeElement, self).__init__(cell, degree, nodes, entity_nodes = entity_nodes)
 
+
+class VectorFiniteElement(object):
+    def __init__(self, FiniteElement):
+        """
+        Construct the corresponding vector element to the FiniteElement.
+
+        """
+        self.finite_element = FiniteElement
+        # set cell and degree
+        self.cell = FiniteElement.cell
+        self.degree = FiniteElement.degree
+        # topological dimension
+        self.d = self.cell.dim
+        # set entity_nodes
+        self.entity_nodes = FiniteElement.entity_nodes
+        for i in range(self.d+1):
+            for k, v in self.entity_nodes[i].items():
+                n1 = lambda x: 2*x
+                n2 = lambda x: 2*x+1
+                self.entity_nodes[i][k] = [f(node) for node in v for f in (n1,n2)]
+        # set nodes_per_entity
+        self.nodes_per_entity = self.d * FiniteElement.nodes_per_entity
+        # set nodes
+        self.nodes = np.repeat(FiniteElement.nodes, self.d, axis=0)
+        # set correct canonical basis
+        self.node_weights = np.array([[1, 0] if i%self.d==0 else [0, 1] for i in range(self.nodes.shape[0])])
+
+    def tabulate(self, points, grad=False):
+        """Evaluate the basis functions of this finite element at the points
+        provided.
+
+        :param points: a list of coordinate tuples at which to
+            tabulate the basis.
+        :param grad: whether to return the tabulation of the basis or the
+            tabulation of the gradient of the basis.
+
+        :result: an array containing the value of each basis function
+            at each point. If `grad` is `True`, the gradient vector of
+            each basis vector at each point is returned as a rank 3
+            array. The shape of the array is (points, nodes) if
+            ``grad`` is ``False`` and (points, nodes, dim) if ``grad``
+            is ``True``.
+
+        The implementation of this method is left as an :ref:`exercise
+        <ex-tabulate>`.
+
+        """
+        # standard basis in R^2
+        e0 = np.array([1, 0])
+        e1 = np.array([0, 1])
+        e = [e0, e1]
+
+        # return tabulation of the basis
+        if not grad:
+            result = self.finite_element.tabulate(self, points, grad)
+            result_vector = np.array([result[i, j//2] * e[i%2]
+                                    for i in range(result.shape[0])
+                                    for j in range(self.d*result.shape[1])])
+            return result_vector
+
+        # return tabulation of the gradient of the basis
+        else: 
+            result = self.finite_element.tabulate(self, points, grad)
+            result_vector = np.array([result[i, j//2, k] * e[i%2]
+                                    for i in range(result.shape[0])
+                                    for j in range(self.d*result.shape[1])
+                                    for k in range(result.shape[2])])
+            return result_vector
