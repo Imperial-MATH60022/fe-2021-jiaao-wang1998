@@ -327,17 +327,18 @@ class VectorFiniteElement(object):
 
         # return tabulation of the basis
         if not grad:
-            result = self.finite_element.tabulate(self, points, grad)
-            result_vector = np.array([result[i, j//2] * e[i%2]
+            result = self.finite_element.tabulate(points, grad)
+            result_vector = np.array([[result[i, j//2] * e[i%2]
+                                    for j in range(self.d*result.shape[1])]
                                     for i in range(result.shape[0])
-                                    for j in range(self.d*result.shape[1])])
+                                    ])
             return result_vector
 
         # return tabulation of the gradient of the basis
         else: 
-            result = self.finite_element.tabulate(self, points, grad)
-            result_vector = np.array([result[i, j//2, k] * e[i%2]
-                                    for i in range(result.shape[0])
-                                    for j in range(self.d*result.shape[1])
-                                    for k in range(result.shape[2])])
+            result = self.finite_element.tabulate(points, grad)
+            result_vector = np.array([[[result[i, j//2, k] * e[i%2]
+                                    for j in range(self.d*result.shape[1])]
+                                    for i in range(result.shape[0])]                                    
+                                    for k in range(result.shape[2])])                    
             return result_vector
