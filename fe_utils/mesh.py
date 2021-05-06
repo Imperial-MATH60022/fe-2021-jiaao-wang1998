@@ -4,6 +4,8 @@ import itertools
 from .finite_elements import LagrangeElement
 from .reference_elements import ReferenceTriangle, ReferenceInterval
 
+from .function_spaces import FunctionSpace
+
 
 class Mesh(object):
     """A one or two dimensional mesh composed of intervals or triangles
@@ -71,6 +73,13 @@ class Mesh(object):
         #: :class:`Mesh` is composed.
         self.cell = (0, ReferenceInterval, ReferenceTriangle)[self.dim]
 
+        # Create a map from the vertices to the element nodes on the
+        # reference cell.
+        self.cg1 = LagrangeElement(self.cell, 1)
+        self.coord_map = self.cg1.tabulate(self.cg1.nodes, grad=True)
+        self.cg1fs = FunctionSpace(self, self.cg1)
+        
+
     def adjacency(self, dim1, dim2):
         """Return the set of `dim2` entities adjacent to each `dim1`
         entity. For example if `dim1==2` and `dim2==1` then return the list of
@@ -110,8 +119,13 @@ class Mesh(object):
         :param c: The number of the cell for which to return the Jacobian.
         :result: The Jacobian for cell ``c``.
         """
+        
+        vertex_coords = self.vertex_coords[self.cg1fs.cell_nodes[c, :], :]
 
-        raise NotImplementedError
+        # evaluate the Jacobian at the cell origin X=0
+        result = np.dot(self.coord_map[0].T, vertex_coords).T
+        
+        return result
 
 
 class UnitIntervalMesh(Mesh):

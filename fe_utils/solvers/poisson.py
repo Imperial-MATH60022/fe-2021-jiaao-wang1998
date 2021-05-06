@@ -18,7 +18,48 @@ def assemble(fs, f):
     the function space in which to solve and the right hand side
     function."""
 
-    raise NotImplementedError
+    # assemble ignoring Dirichlet boudary condition
+    fe = fs.element
+    mesh = fs.mesh
+
+    # Create an appropriate (complete) quadrature rule.
+    Q = gauss_quadrature(fe.cell, 2*fe.degree)
+
+    # Tabulate the basis functions and their gradients at the quadrature points.
+    phi = fe.tabulate(Q.points)
+    psi = fe.tabulate(Q.points, grad=True)
+
+    # Create the left hand side matrix and right hand side vector.
+    # This creates a sparse matrix because creating a dense one may
+    # well run your machine out of memory!
+    A = sp.lil_matrix((fs.node_count, fs.node_count))
+    l = np.zeros(fs.node_count)
+
+    # Now loop over all the cells and assemble A and l
+    for c in range(mesh.entity_counts[-1]):
+        # Find the appropriate global node numbers for this cell.
+        nodes = fs.cell_nodes[c, :]
+
+        # Compute the change of coordinates.
+        J = mesh.jacobian(c)
+        detJ = np.abs(np.linalg.det(J))
+
+        # Compute the actual cell quadrature for rignt-hand side
+        l[nodes] += np.einsum("qi, k, qk, q -> i", phi, f.values[nodes], phi, Q.weights) * detJ
+
+        # Compute the actual cell quadrature for left-hand side
+        A[np.ix_(nodes, nodes)] += np.einsum("ba, qib, ca, qjc, q -> ij", np.linalg.inv(J), psi, np.linalg.inv(J), psi, Q.weights) * detJ                             
+
+    # set global vector rows corresponding to boundary nodes to 0
+    l[boundary_nodes(fs)] = 0
+
+    # set global matrix rows corresponding to boundary nodes to 0
+    A[boundary_nodes(fs), :] = 0
+
+    # set diagonal entry on each matrix row corresponding to a boundary node to 1
+    A[boundary_nodes(fs), boundary_nodes(fs)] = 1
+
+    return A, l
 
 
 def boundary_nodes(fs):
